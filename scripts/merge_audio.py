@@ -5,20 +5,42 @@ import sys
 import subprocess
 import os
 
+def get_duration(path: str) -> float:
+    """取得媒體檔案時長（秒）"""
+    result = subprocess.run(
+        ["ffprobe", "-v", "quiet", "-show_entries", "format=duration",
+         "-of", "csv=p=0", path],
+        capture_output=True, text=True
+    )
+    return float(result.stdout.strip())
+
+
 def merge_audio(input_video: str, dubbed_audio: str, output_video: str) -> None:
-    """將配音音訊合入影片，替換原始音軌"""
+    """將配音音訊合入影片，替換原始音軌。
+    若配音比影片短，補靜音至影片結尾；若配音比影片長，截斷至影片長度。
+    """
     os.makedirs(os.path.dirname(os.path.abspath(output_video)), exist_ok=True)
+
+    video_dur = get_duration(input_video)
+    audio_dur = get_duration(dubbed_audio)
+
+    # 配音比影片短 → 用 apad 補靜音到影片長度
+    # 配音比影片長 → 截斷（atrim）
+    if audio_dur < video_dur:
+        audio_filter = f"apad=whole_dur={video_dur}"
+    else:
+        audio_filter = f"atrim=0:{video_dur}"
 
     cmd = [
         "ffmpeg", "-y",
-        "-i", input_video,    # 原始影片（取影像）
-        "-i", dubbed_audio,   # 配音音訊（取音軌）
-        "-c:v", "copy",       # 影像直接複製，不重新編碼（快且不損畫質）
-        "-c:a", "aac",        # 音訊轉 AAC
+        "-i", input_video,
+        "-i", dubbed_audio,
+        "-c:v", "copy",
+        "-filter_complex", f"[1:a]{audio_filter}[aout]",
+        "-map", "0:v:0",
+        "-map", "[aout]",
+        "-c:a", "aac",
         "-b:a", "192k",
-        "-map", "0:v:0",      # 取第一個輸入的影像串流
-        "-map", "1:a:0",      # 取第二個輸入的音訊串流
-        "-shortest",          # 以較短的串流為準（避免配音比影片短時產生黑屏）
         output_video
     ]
 
