@@ -13,7 +13,5 @@ dependencies = [
     "transformers>=4.46.0",
 ]
 
-[tool.uv]
-dev-dependencies = [
-    "pytest>=8.0.0",
-]
+[dependency-groups]
+dev = ["pytest>=8.0.0"]
