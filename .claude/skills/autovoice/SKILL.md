@@ -65,11 +65,11 @@ cd /home/joshhu/workspace/autovoice
 
 辨識完成後，讀取 `output/<BASENAME>/transcript.txt`，顯示辨識語言和前 200 字給使用者確認。
 
-### 步驟 4：擷取 30 秒文字稿（Claude 執行）
+### 步驟 4：擷取 30 秒文字稿（Claude 讀 JSON 後寫入檔案）
 
-從 `output/<BASENAME>/transcript.json` 讀取 segments，
-找出 start < 40 秒（含步驟 2 截取從第 10-40 秒）的片段文字，
-合併後存入 `output/<BASENAME>/ref_30s_transcript.txt`。
+讀取 `output/<BASENAME>/transcript.json`，從 segments 中篩選
+`start >= 10` 且 `start < 40` 的片段（對應 ref_30s.wav：第 10-40 秒），
+合併 text 欄位後用 Write 工具寫入 `output/<BASENAME>/ref_30s_transcript.txt`。
 
 這個文字稿是聲音克隆的關鍵，必須對應 ref_30s.wav 的內容。
 
@@ -137,7 +137,12 @@ cd /home/joshhu/workspace/autovoice
 
 ### 步驟 10：完成報告
 
-顯示：
+先驗證輸出檔案存在：
+```bash
+ls -lh /home/joshhu/workspace/autovoice/output/<BASENAME>/
+```
+
+然後向使用者顯示：
 ```
 AutoVoice 完成！
   原始語言：[語言]
@@ -146,12 +151,12 @@ AutoVoice 完成！
   配音時長：[N] 秒
 
 中間檔案：
-  output/<BASENAME>/audio.wav          <- 完整音訊
-  output/<BASENAME>/ref_30s.wav        <- 參考音訊（30s）
-  output/<BASENAME>/transcript.txt     <- 原始文字稿
+  output/<BASENAME>/audio.wav               <- 完整音訊
+  output/<BASENAME>/ref_30s.wav             <- 參考音訊（30s）
+  output/<BASENAME>/transcript.txt          <- 原始文字稿
   output/<BASENAME>/transcript_corrected.txt <- 校對後
-  output/<BASENAME>/transcript_<lang>.txt    <- 翻譯
-  output/<BASENAME>/dubbed_<lang>.wav  <- 配音音訊
+  output/<BASENAME>/transcript_<lang>.txt   <- 翻譯
+  output/<BASENAME>/dubbed_<lang>.wav       <- 配音音訊
 ```
 
 ## 錯誤處理
