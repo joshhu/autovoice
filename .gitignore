@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+*.pyc
+output/*
+!output/.gitkeep
+.env
+*.egg-info/
+*.wav
+*.mp4
+*.m4a
+*.mp3
+*.webm
+models/
