@@ -18,6 +18,7 @@ LANG_MAP = {
     "de": "German", "german": "German", "德文": "German",
     "es": "Spanish", "spanish": "Spanish", "西班牙文": "Spanish",
     "pt": "Portuguese", "portuguese": "Portuguese", "葡萄牙文": "Portuguese",
+    "ru": "Russian", "russian": "Russian", "俄文": "Russian",
 }
 
 
@@ -35,13 +36,20 @@ def load_audio(wav_path: str) -> tuple:
 
 
 def split_text(text: str, max_chars: int = 200) -> list:
-    """將長文字按句子分割，避免單段過長"""
+    """將長文字按句子分割，避免單段過長；無標點時按字元數強制切割"""
     sentences = re.split(r'(?<=[。！？.!?])\s*', text)
     chunks = []
     current = ""
     for sent in sentences:
         if not sent.strip():
             continue
+        # 單句超過 max_chars 時，強制按字元數切割
+        while len(sent) > max_chars:
+            if current.strip():
+                chunks.append(current.strip())
+                current = ""
+            chunks.append(sent[:max_chars])
+            sent = sent[max_chars:]
         if len(current) + len(sent) <= max_chars:
             current += sent + " "
         else:
@@ -59,13 +67,7 @@ def get_attn_implementation() -> str:
         import flash_attn  # noqa: F401
         return "kernels-community/flash-attn3"
     except ImportError:
-        pass
-    try:
-        import flash_attn_2  # noqa: F401
-        return "flash_attention_2"
-    except ImportError:
-        pass
-    return "sdpa"
+        return "sdpa"
 
 
 def run_tts_clone(
