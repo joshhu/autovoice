@@ -15,3 +15,8 @@ dependencies = [
 
 [dependency-groups]
 dev = ["pytest>=8.0.0"]
+
+[tool.pytest.ini_options]
+markers = [
+    "integration: 整合測試，需要 GPU 與真實模型",
+]
